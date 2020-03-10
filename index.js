@@ -97,17 +97,36 @@ server.delete('/api/users/:id',(req, res) => {
 
 server.put('/api/users/:id',(req, res) => {
     const userInfo = req.body;
+
+    if (userInfo.name == false || userInfo.bio == false) {
+        res.status(400).json({errorMessage: "Please provide name and bio for the user."});
+    return;
+    } 
+
     Users.update(req.params.id, userInfo)
     .then(count => {
-        if(count === 1)
-        { res.status(200).json(count)
+        if(count === 1){ 
+            Users.findById(req.params.id)
+            .then(users => {
+                if(users === undefined)
+                { 
+                    res.status(404).json({ errorMessage: "The user with the specified ID does not exist." })
+                    return;
+                } else {
+                  res.status(200).json(users)  
+                }
+            })    
+            .catch(err => {
+                console.log(err)
+                res.status(500).json({ errorMessage: "The users information could not be retrieved." })
+            });
         } else {
             res.status(404).json({ errorMessage: "The user with the specified ID does not exist." })
         } 
     })
     .catch(err => {
         console.log(err)
-        res.status(500).json({ errorMessage: "The users information could not be retrieved." })
+        res.status(500).json({ errorMessage: "The users information could not be modified." })
     });
 })
 
